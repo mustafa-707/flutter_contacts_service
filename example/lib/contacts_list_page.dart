@@ -12,7 +12,7 @@ class ContactListPage extends StatefulWidget {
 }
 
 class _ContactListPageState extends State<ContactListPage> {
-  List<Contact>? _contacts;
+  List<ContactInfo>? _contacts;
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _ContactListPageState extends State<ContactListPage> {
   }
 
   void updateContact() async {
-    Contact ninja = _contacts!
+    ContactInfo ninja = _contacts!
         .firstWhere((contact) => contact.familyName!.startsWith("Ninja"));
     ninja.avatar = null;
     await FlutterContactsService.updateContact(ninja);
@@ -92,7 +92,7 @@ class _ContactListPageState extends State<ContactListPage> {
             ? ListView.builder(
                 itemCount: _contacts!.length,
                 itemBuilder: (BuildContext context, int index) {
-                  Contact c = _contacts!.elementAt(index);
+                  ContactInfo c = _contacts!.elementAt(index);
                   return ListTile(
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
@@ -116,7 +116,7 @@ class _ContactListPageState extends State<ContactListPage> {
     );
   }
 
-  void contactOnDeviceHasBeenUpdated(Contact contact) {
+  void contactOnDeviceHasBeenUpdated(ContactInfo contact) {
     this.setState(() {
       var id = _contacts!.indexWhere((c) => c.identifier == contact.identifier);
       _contacts![id] = contact;
@@ -131,8 +131,8 @@ class ContactDetailsPage extends StatelessWidget {
     required this.onContactDeviceSave,
   });
 
-  final Contact _contact;
-  final Function(Contact) onContactDeviceSave;
+  final ContactInfo _contact;
+  final Function(ContactInfo) onContactDeviceSave;
 
   _openExistingContactOnDevice(BuildContext context) async {
     try {
@@ -285,7 +285,7 @@ class AddressesTile extends StatelessWidget {
 class ItemsTile extends StatelessWidget {
   const ItemsTile(this._title, this._items, {super.key});
 
-  final List<Item> _items;
+  final List<ValueItem> _items;
   final String _title;
 
   @override
@@ -319,7 +319,7 @@ class AddContactPage extends StatefulWidget {
 }
 
 class _AddContactPageState extends State<AddContactPage> {
-  Contact contact = Contact();
+  ContactInfo contact = ContactInfo();
   PostalAddress address = PostalAddress(label: "Home");
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -369,13 +369,13 @@ class _AddContactPageState extends State<AddContactPage> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Phone'),
                 onSaved: (v) =>
-                    contact.phones = [Item(label: "mobile", value: v)],
+                    contact.phones = [ValueItem(label: "mobile", value: v)],
                 keyboardType: TextInputType.phone,
               ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'E-mail'),
                 onSaved: (v) =>
-                    contact.emails = [Item(label: "work", value: v)],
+                    contact.emails = [ValueItem(label: "work", value: v)],
                 keyboardType: TextInputType.emailAddress,
               ),
               TextFormField(
@@ -417,14 +417,14 @@ class _AddContactPageState extends State<AddContactPage> {
 class UpdateContactsPage extends StatefulWidget {
   const UpdateContactsPage({super.key, required this.contact});
 
-  final Contact contact;
+  final ContactInfo contact;
 
   @override
   _UpdateContactsPageState createState() => _UpdateContactsPageState();
 }
 
 class _UpdateContactsPageState extends State<UpdateContactsPage> {
-  late Contact contact;
+  late ContactInfo contact;
   PostalAddress address = PostalAddress(label: "Home");
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -489,13 +489,13 @@ class _UpdateContactsPageState extends State<UpdateContactsPage> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Phone'),
                 onSaved: (v) =>
-                    contact.phones = [Item(label: "mobile", value: v)],
+                    contact.phones = [ValueItem(label: "mobile", value: v)],
                 keyboardType: TextInputType.phone,
               ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'E-mail'),
                 onSaved: (v) =>
-                    contact.emails = [Item(label: "work", value: v)],
+                    contact.emails = [ValueItem(label: "work", value: v)],
                 keyboardType: TextInputType.emailAddress,
               ),
               TextFormField(

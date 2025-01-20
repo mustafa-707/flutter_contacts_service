@@ -11,7 +11,7 @@ class FlutterContactsService {
 
   /// Fetches all contacts, or when specified, the contacts with a name
   /// matching [query]
-  static Future<List<Contact>> getContacts({
+  static Future<List<ContactInfo>> getContacts({
     String? query,
     bool withThumbnails = true,
     bool photoHighResolution = true,
@@ -28,12 +28,12 @@ class FlutterContactsService {
       'iOSLocalizedLabels': iOSLocalizedLabels,
       'androidLocalizedLabels': androidLocalizedLabels,
     });
-    return contacts.map((m) => Contact.fromMap(m)).toList();
+    return contacts.map((m) => ContactInfo.fromMap(m)).toList();
   }
 
   /// Fetches all contacts, or when specified, the contacts with the phone
   /// matching [phone]
-  static Future<List<Contact>> getContactsForPhone(String? phone,
+  static Future<List<ContactInfo>> getContactsForPhone(String? phone,
       {bool withThumbnails = true,
       bool photoHighResolution = true,
       bool orderByGivenName = true,
@@ -50,13 +50,13 @@ class FlutterContactsService {
       'iOSLocalizedLabels': iOSLocalizedLabels,
       'androidLocalizedLabels': androidLocalizedLabels,
     });
-    return contacts.map((m) => Contact.fromMap(m)).toList();
+    return contacts.map((m) => ContactInfo.fromMap(m)).toList();
   }
 
   /// Fetches all contacts, or when specified, the contacts with the email
   /// matching [email]
   /// Works only on iOS
-  static Future<List<Contact>> getContactsForEmail(String email,
+  static Future<List<ContactInfo>> getContactsForEmail(String email,
       {bool withThumbnails = true,
       bool photoHighResolution = true,
       bool orderByGivenName = true,
@@ -71,32 +71,32 @@ class FlutterContactsService {
       'iOSLocalizedLabels': iOSLocalizedLabels,
       'androidLocalizedLabels': androidLocalizedLabels,
     });
-    return contacts.map((m) => Contact.fromMap(m)).toList();
+    return contacts.map((m) => ContactInfo.fromMap(m)).toList();
   }
 
   /// Loads the avatar for the given contact and returns it. If the user does
   /// not have an avatar, then `null` is returned in that slot. Only implemented
   /// on Android.
-  static Future<Uint8List?> getAvatar(final Contact contact,
+  static Future<Uint8List?> getAvatar(final ContactInfo contact,
           {final bool photoHighRes = true}) =>
       _channel.invokeMethod('getAvatar', <String, dynamic>{
-        'contact': Contact._toMap(contact),
+        'contact': ContactInfo._toMap(contact),
         'photoHighResolution': photoHighRes,
       });
 
   /// Adds the [contact] to the device contact list
-  static Future addContact(Contact contact) =>
-      _channel.invokeMethod('addContact', Contact._toMap(contact));
+  static Future addContact(ContactInfo contact) =>
+      _channel.invokeMethod('addContact', ContactInfo._toMap(contact));
 
   /// Deletes the [contact] if it has a valid identifier
-  static Future deleteContact(Contact contact) =>
-      _channel.invokeMethod('deleteContact', Contact._toMap(contact));
+  static Future deleteContact(ContactInfo contact) =>
+      _channel.invokeMethod('deleteContact', ContactInfo._toMap(contact));
 
   /// Updates the [contact] if it has a valid identifier
-  static Future updateContact(Contact contact) =>
-      _channel.invokeMethod('updateContact', Contact._toMap(contact));
+  static Future updateContact(ContactInfo contact) =>
+      _channel.invokeMethod('updateContact', ContactInfo._toMap(contact));
 
-  static Future<Contact> openContactForm(
+  static Future<ContactInfo> openContactForm(
       {bool iOSLocalizedLabels = true,
       bool androidLocalizedLabels = true}) async {
     dynamic result =
@@ -107,13 +107,13 @@ class FlutterContactsService {
     return _handleFormOperation(result);
   }
 
-  static Future<Contact> openExistingContact(Contact contact,
+  static Future<ContactInfo> openExistingContact(ContactInfo contact,
       {bool iOSLocalizedLabels = true,
       bool androidLocalizedLabels = true}) async {
     dynamic result = await _channel.invokeMethod(
       'openExistingContact',
       <String, dynamic>{
-        'contact': Contact._toMap(contact),
+        'contact': ContactInfo._toMap(contact),
         'iOSLocalizedLabels': iOSLocalizedLabels,
         'androidLocalizedLabels': androidLocalizedLabels,
       },
@@ -122,7 +122,7 @@ class FlutterContactsService {
   }
 
   // Displays the device/native contact picker dialog and returns the contact selected by the user
-  static Future<Contact?> openDeviceContactPicker(
+  static Future<ContactInfo?> openDeviceContactPicker(
       {bool iOSLocalizedLabels = true,
       bool androidLocalizedLabels = true}) async {
     dynamic result = await _channel
@@ -142,7 +142,7 @@ class FlutterContactsService {
     return _handleFormOperation(result);
   }
 
-  static Contact _handleFormOperation(dynamic result) {
+  static ContactInfo _handleFormOperation(dynamic result) {
     if (result is int) {
       switch (result) {
         case 1:
@@ -156,7 +156,7 @@ class FlutterContactsService {
               errorCode: FormOperationErrorCode.FORM_OPERATION_UNKNOWN_ERROR);
       }
     } else if (result is Map) {
-      return Contact.fromMap(result);
+      return ContactInfo.fromMap(result);
     } else {
       throw FormOperationException(
           errorCode: FormOperationErrorCode.FORM_OPERATION_UNKNOWN_ERROR);
@@ -178,8 +178,8 @@ enum FormOperationErrorCode {
   FORM_OPERATION_UNKNOWN_ERROR
 }
 
-class Contact {
-  Contact({
+class ContactInfo {
+  ContactInfo({
     this.displayName,
     this.givenName,
     this.middleName,
@@ -209,8 +209,8 @@ class Contact {
       jobTitle;
   String? androidAccountTypeRaw, androidAccountName;
   AndroidAccountType? androidAccountType;
-  List<Item>? emails = [];
-  List<Item>? phones = [];
+  List<ValueItem>? emails = [];
+  List<ValueItem>? phones = [];
   List<PostalAddress>? postalAddresses = [];
   Uint8List? avatar;
   DateTime? birthday;
@@ -221,7 +221,7 @@ class Contact {
         .toUpperCase();
   }
 
-  Contact.fromMap(Map m) {
+  ContactInfo.fromMap(Map m) {
     identifier = m["identifier"];
     displayName = m["displayName"];
     givenName = m["givenName"];
@@ -234,8 +234,8 @@ class Contact {
     androidAccountTypeRaw = m["androidAccountType"];
     androidAccountType = accountTypeFromString(androidAccountTypeRaw);
     androidAccountName = m["androidAccountName"];
-    emails = (m["emails"] as List?)?.map((m) => Item.fromMap(m)).toList();
-    phones = (m["phones"] as List?)?.map((m) => Item.fromMap(m)).toList();
+    emails = (m["emails"] as List?)?.map((m) => ValueItem.fromMap(m)).toList();
+    phones = (m["phones"] as List?)?.map((m) => ValueItem.fromMap(m)).toList();
     postalAddresses = (m["postalAddresses"] as List?)
         ?.map((m) => PostalAddress.fromMap(m))
         .toList();
@@ -247,14 +247,14 @@ class Contact {
     }
   }
 
-  static Map _toMap(Contact contact) {
+  static Map _toMap(ContactInfo contact) {
     var emails = [];
-    for (Item email in contact.emails ?? []) {
-      emails.add(Item._toMap(email));
+    for (ValueItem email in contact.emails ?? []) {
+      emails.add(ValueItem._toMap(email));
     }
     var phones = [];
-    for (Item phone in contact.phones ?? []) {
-      phones.add(Item._toMap(phone));
+    for (ValueItem phone in contact.phones ?? []) {
+      phones.add(ValueItem._toMap(phone));
     }
     var postalAddresses = [];
     for (PostalAddress address in contact.postalAddresses ?? []) {
@@ -286,11 +286,11 @@ class Contact {
   }
 
   Map toMap() {
-    return Contact._toMap(this);
+    return ContactInfo._toMap(this);
   }
 
   /// The [+] operator fills in this contact's empty fields with the fields from [other]
-  operator +(Contact other) => Contact(
+  operator +(ContactInfo other) => ContactInfo(
         givenName: givenName ?? other.givenName,
         middleName: middleName ?? other.middleName,
         prefix: prefix ?? other.prefix,
@@ -302,10 +302,16 @@ class Contact {
         androidAccountName: androidAccountName ?? other.androidAccountName,
         emails: emails == null
             ? other.emails
-            : emails!.toSet().union(other.emails?.toSet() ?? <Item>{}).toList(),
+            : emails!
+                .toSet()
+                .union(other.emails?.toSet() ?? <ValueItem>{})
+                .toList(),
         phones: phones == null
             ? other.phones
-            : phones!.toSet().union(other.phones?.toSet() ?? <Item>{}).toList(),
+            : phones!
+                .toSet()
+                .union(other.phones?.toSet() ?? <ValueItem>{})
+                .toList(),
         postalAddresses: postalAddresses == null
             ? other.postalAddresses
             : postalAddresses!
@@ -319,7 +325,7 @@ class Contact {
   /// Returns true if all items in this contact are identical.
   @override
   bool operator ==(Object other) {
-    return other is Contact &&
+    return other is ContactInfo &&
         avatar == other.avatar &&
         company == other.company &&
         displayName == other.displayName &&
@@ -466,25 +472,25 @@ class PostalAddress {
 
 /// Item class used for contact fields which only have a [label] and
 /// a [value], such as emails and phone numbers
-class Item {
-  Item({this.label, this.value});
+class ValueItem {
+  ValueItem({this.label, this.value});
 
   String? label, value;
 
-  Item.fromMap(Map m) {
+  ValueItem.fromMap(Map m) {
     label = m["label"];
     value = m["value"];
   }
 
   @override
   bool operator ==(Object other) {
-    return other is Item && label == other.label && value == other.value;
+    return other is ValueItem && label == other.label && value == other.value;
   }
 
   @override
   int get hashCode => hash2(label ?? "", value ?? "");
 
-  static Map _toMap(Item i) => {"label": i.label, "value": i.value};
+  static Map _toMap(ValueItem i) => {"label": i.label, "value": i.value};
 }
 
 enum AndroidAccountType { facebook, google, whatsapp, other }

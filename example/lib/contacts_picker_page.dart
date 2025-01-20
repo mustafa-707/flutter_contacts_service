@@ -10,7 +10,7 @@ class ContactPickerPage extends StatefulWidget {
 }
 
 class _ContactPickerPageState extends State<ContactPickerPage> {
-  Contact? _contact;
+  ContactInfo? _contact;
 
   @override
   void initState() {
@@ -19,7 +19,7 @@ class _ContactPickerPageState extends State<ContactPickerPage> {
 
   Future<void> _pickContact() async {
     try {
-      final Contact? contact =
+      final ContactInfo? contact =
           await FlutterContactsService.openDeviceContactPicker(
         iOSLocalizedLabels: iOSLocalizedLabels,
       );
