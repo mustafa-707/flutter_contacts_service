@@ -65,25 +65,25 @@ import 'package:flutter_contacts_service/flutter_contacts_service.dart';
 
 ```dart
 // Get all contacts
-List<Contact> contacts = await FlutterContactsService.getContacts();
+List<ContactInfo> contacts = await FlutterContactsService.getContacts();
 
 // Get contacts without thumbnails (faster)
-List<Contact> contacts = await FlutterContactsService.getContacts(
+List<ContactInfo> contacts = await FlutterContactsService.getContacts(
   withThumbnails: false
 );
 
 // Get contacts by query
-List<Contact> contacts = await FlutterContactsService.getContacts(
+List<ContactInfo> contacts = await FlutterContactsService.getContacts(
   query: "John"
 );
 
 // Get contacts by phone number
-List<Contact> contacts = await FlutterContactsService.getContactsForPhone(
+List<ContactInfo> contacts = await FlutterContactsService.getContactsForPhone(
   phone: "+1234567890"
 );
 
 // Get contacts by email
-List<Contact> contacts = await FlutterContactsService.getContactsForEmail(
+List<ContactInfo> contacts = await FlutterContactsService.getContactsForEmail(
   email: "example@email.com"
 );
 
@@ -98,7 +98,7 @@ Uint8List avatar = await FlutterContactsService.getAvatar(
 
 ```dart
 // Add a new contact
-Contact newContact = Contact(
+ContactInfo newContact = ContactInfo(
   givenName: "John",
   familyName: "Doe",
   phones: [Item(label: "mobile", value: "+1234567890")],
@@ -130,7 +130,7 @@ await FlutterContactsService.openDeviceContactPicker();
 ## Contact Model
 
 ```dart
-class Contact {
+class ContactInfo {
   String? identifier;
   String? displayName;
   String? givenName;
@@ -142,8 +142,8 @@ class Contact {
   String? jobTitle;
   String? note;
   String? birthday;
-  List<Item> emails;
-  List<Item> phones;
+  List<ValueItem> emails;
+  List<ValueItem> phones;
   List<PostalAddress> postalAddresses;
   Uint8List? avatar;
 }

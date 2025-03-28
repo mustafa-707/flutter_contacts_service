@@ -31,7 +31,7 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
@@ -42,10 +42,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _askPermissions(String? routeName) async {
-    PermissionStatus permissionStatus = await _getContactPermission();
+    final permissionStatus = await _getContactPermission();
     if (permissionStatus == PermissionStatus.granted) {
       if (routeName != null) {
-        Navigator.of(context).pushNamed(routeName);
+        if (context.mounted) {
+          // ignore: use_build_context_synchronously
+          Navigator.of(context).pushNamed(routeName);
+        }
       }
     } else {
       _handleInvalidPermissions(permissionStatus);

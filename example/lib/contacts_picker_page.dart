@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts_service/flutter_contacts_service.dart';
 import 'package:flutter_contacts_service_example/main.dart';
@@ -6,7 +8,7 @@ class ContactPickerPage extends StatefulWidget {
   const ContactPickerPage({super.key});
 
   @override
-  _ContactPickerPageState createState() => _ContactPickerPageState();
+  State<ContactPickerPage> createState() => _ContactPickerPageState();
 }
 
 class _ContactPickerPageState extends State<ContactPickerPage> {
@@ -27,7 +29,7 @@ class _ContactPickerPageState extends State<ContactPickerPage> {
         _contact = contact;
       });
     } catch (e) {
-      print(e.toString());
+      log(e.toString());
     }
   }
 
@@ -39,8 +41,8 @@ class _ContactPickerPageState extends State<ContactPickerPage> {
           child: Column(
         children: <Widget>[
           ElevatedButton(
-            child: const Text('Pick a contact'),
             onPressed: _pickContact,
+            child: const Text('Pick a contact'),
           ),
           if (_contact != null)
             Text('Contact selected: ${_contact?.displayName}'),

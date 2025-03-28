@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_contacts_service/flutter_contacts_service.dart';
@@ -8,7 +10,7 @@ class ContactListPage extends StatefulWidget {
   const ContactListPage({super.key});
 
   @override
-  _ContactListPageState createState() => _ContactListPageState();
+  State<ContactListPage> createState() => _ContactListPageState();
 }
 
 class _ContactListPageState extends State<ContactListPage> {
@@ -60,7 +62,7 @@ class _ContactListPageState extends State<ContactListPage> {
         case FormOperationErrorCode.FORM_COULD_NOT_BE_OPEN:
         case FormOperationErrorCode.FORM_OPERATION_UNKNOWN_ERROR:
         default:
-          print(e.errorCode);
+          log(e.errorCode.toString());
       }
     }
   }
@@ -117,7 +119,7 @@ class _ContactListPageState extends State<ContactListPage> {
   }
 
   void contactOnDeviceHasBeenUpdated(ContactInfo contact) {
-    this.setState(() {
+    setState(() {
       var id = _contacts!.indexWhere((c) => c.identifier == contact.identifier);
       _contacts![id] = contact;
     });
@@ -132,15 +134,16 @@ class ContactDetailsPage extends StatelessWidget {
   });
 
   final ContactInfo _contact;
-  final Function(ContactInfo) onContactDeviceSave;
+  final Function(ContactInfo)? onContactDeviceSave;
 
   _openExistingContactOnDevice(BuildContext context) async {
     try {
       var contact = await FlutterContactsService.openExistingContact(_contact,
           iOSLocalizedLabels: iOSLocalizedLabels);
       if (onContactDeviceSave != null) {
-        onContactDeviceSave(contact);
+        onContactDeviceSave?.call(contact);
       }
+      if (!context.mounted) return;
       Navigator.of(context).pop();
     } on FormOperationException catch (e) {
       switch (e.errorCode) {
@@ -148,7 +151,7 @@ class ContactDetailsPage extends StatelessWidget {
         case FormOperationErrorCode.FORM_COULD_NOT_BE_OPEN:
         case FormOperationErrorCode.FORM_OPERATION_UNKNOWN_ERROR:
         default:
-          print(e.toString());
+          log(e.toString());
       }
     }
   }
@@ -240,6 +243,7 @@ class AddressesTile extends StatelessWidget {
 
   final List<PostalAddress> _addresses;
 
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,7 +424,7 @@ class UpdateContactsPage extends StatefulWidget {
   final ContactInfo contact;
 
   @override
-  _UpdateContactsPageState createState() => _UpdateContactsPageState();
+  State<UpdateContactsPage> createState() => _UpdateContactsPageState();
 }
 
 class _UpdateContactsPageState extends State<UpdateContactsPage> {
@@ -449,6 +453,9 @@ class _UpdateContactsPageState extends State<UpdateContactsPage> {
               _formKey.currentState?.save();
               contact.postalAddresses = [address];
               await FlutterContactsService.updateContact(contact);
+              if (!context.mounted) {
+                return;
+              }
               Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (context) => ContactListPage()));
             },
