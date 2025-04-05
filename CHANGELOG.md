@@ -2,6 +2,10 @@
 
 ## 0.0.2+1
 
+- Add missing `ContactInfo` object to `note` field.
+
+## 0.0.2+1
+
 - Change the `Contact` object to `ContactInfo` in README.
 
 ## 0.0.2

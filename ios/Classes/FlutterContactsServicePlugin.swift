@@ -160,6 +160,7 @@ public class FlutterContactsServicePlugin: NSObject, FlutterPlugin, CNContactVie
                 CNContactFamilyNameKey,
                 CNContactGivenNameKey,
                 CNContactMiddleNameKey,
+                CNContactNoteKey,
                 CNContactNamePrefixKey,
                 CNContactNameSuffixKey,
                 CNContactPostalAddressesKey,
@@ -431,6 +432,7 @@ public class FlutterContactsServicePlugin: NSObject, FlutterPlugin, CNContactVie
                 CNContactFamilyNameKey,
                 CNContactGivenNameKey,
                 CNContactMiddleNameKey,
+                CNContactNoteKey,
                 CNContactNamePrefixKey,
                 CNContactNameSuffixKey,
                 CNContactPostalAddressesKey,
@@ -451,6 +453,7 @@ public class FlutterContactsServicePlugin: NSObject, FlutterPlugin, CNContactVie
                 contact.nameSuffix = dictionary["suffix"] as? String ?? ""
                 contact.organizationName = dictionary["company"] as? String ?? ""
                 contact.jobTitle = dictionary["jobTitle"] as? String ?? ""
+                contact.note = dictionary["note"] as? String ?? ""
                 contact.imageData = (dictionary["avatar"] as? FlutterStandardTypedData)?.data
 
                 if let phoneNumbers = dictionary["phones"] as? [[String: String]] {
@@ -513,6 +516,7 @@ public class FlutterContactsServicePlugin: NSObject, FlutterPlugin, CNContactVie
         contact.nameSuffix = dictionary["suffix"] as? String ?? ""
         contact.organizationName = dictionary["company"] as? String ?? ""
         contact.jobTitle = dictionary["jobTitle"] as? String ?? ""
+        contact.note = dictionary["note"] as? String ?? ""
         if let avatarData = (dictionary["avatar"] as? FlutterStandardTypedData)?.data {
             contact.imageData = avatarData
         }
@@ -570,6 +574,7 @@ public class FlutterContactsServicePlugin: NSObject, FlutterPlugin, CNContactVie
         result["givenName"] = contact.givenName
         result["familyName"] = contact.familyName
         result["middleName"] = contact.middleName
+        result["note"] = contact.note
         result["prefix"] = contact.namePrefix
         result["suffix"] = contact.nameSuffix
         result["company"] = contact.organizationName

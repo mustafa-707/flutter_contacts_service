@@ -19,26 +19,30 @@ class FlutterContactsService {
     bool iOSLocalizedLabels = true,
     bool androidLocalizedLabels = true,
   }) async {
-    Iterable contacts =
-        await _channel.invokeMethod('getContacts', <String, dynamic>{
-      'query': query,
-      'withThumbnails': withThumbnails,
-      'photoHighResolution': photoHighResolution,
-      'orderByGivenName': orderByGivenName,
-      'iOSLocalizedLabels': iOSLocalizedLabels,
-      'androidLocalizedLabels': androidLocalizedLabels,
-    });
+    Iterable contacts = await _channel.invokeMethod(
+      'getContacts',
+      <String, dynamic>{
+        'query': query,
+        'withThumbnails': withThumbnails,
+        'photoHighResolution': photoHighResolution,
+        'orderByGivenName': orderByGivenName,
+        'iOSLocalizedLabels': iOSLocalizedLabels,
+        'androidLocalizedLabels': androidLocalizedLabels,
+      },
+    );
     return contacts.map((m) => ContactInfo.fromMap(m)).toList();
   }
 
   /// Fetches all contacts, or when specified, the contacts with the phone
   /// matching [phone]
-  static Future<List<ContactInfo>> getContactsForPhone(String? phone,
-      {bool withThumbnails = true,
-      bool photoHighResolution = true,
-      bool orderByGivenName = true,
-      bool iOSLocalizedLabels = true,
-      bool androidLocalizedLabels = true}) async {
+  static Future<List<ContactInfo>> getContactsForPhone(
+    String? phone, {
+    bool withThumbnails = true,
+    bool photoHighResolution = true,
+    bool orderByGivenName = true,
+    bool iOSLocalizedLabels = true,
+    bool androidLocalizedLabels = true,
+  }) async {
     if (phone == null || phone.isEmpty) return List.empty();
 
     Iterable contacts =
@@ -56,49 +60,65 @@ class FlutterContactsService {
   /// Fetches all contacts, or when specified, the contacts with the email
   /// matching [email]
   /// Works only on iOS
-  static Future<List<ContactInfo>> getContactsForEmail(String email,
-      {bool withThumbnails = true,
-      bool photoHighResolution = true,
-      bool orderByGivenName = true,
-      bool iOSLocalizedLabels = true,
-      bool androidLocalizedLabels = true}) async {
-    List contacts =
-        await _channel.invokeMethod('getContactsForEmail', <String, dynamic>{
-      'email': email,
-      'withThumbnails': withThumbnails,
-      'photoHighResolution': photoHighResolution,
-      'orderByGivenName': orderByGivenName,
-      'iOSLocalizedLabels': iOSLocalizedLabels,
-      'androidLocalizedLabels': androidLocalizedLabels,
-    });
+  static Future<List<ContactInfo>> getContactsForEmail(
+    String email, {
+    bool withThumbnails = true,
+    bool photoHighResolution = true,
+    bool orderByGivenName = true,
+    bool iOSLocalizedLabels = true,
+    bool androidLocalizedLabels = true,
+  }) async {
+    List contacts = await _channel.invokeMethod(
+      'getContactsForEmail',
+      <String, dynamic>{
+        'email': email,
+        'withThumbnails': withThumbnails,
+        'photoHighResolution': photoHighResolution,
+        'orderByGivenName': orderByGivenName,
+        'iOSLocalizedLabels': iOSLocalizedLabels,
+        'androidLocalizedLabels': androidLocalizedLabels,
+      },
+    );
     return contacts.map((m) => ContactInfo.fromMap(m)).toList();
   }
 
   /// Loads the avatar for the given contact and returns it. If the user does
   /// not have an avatar, then `null` is returned in that slot. Only implemented
   /// on Android.
-  static Future<Uint8List?> getAvatar(final ContactInfo contact,
-          {final bool photoHighRes = true}) =>
-      _channel.invokeMethod('getAvatar', <String, dynamic>{
-        'contact': ContactInfo._toMap(contact),
-        'photoHighResolution': photoHighRes,
-      });
+  static Future<Uint8List?> getAvatar(
+    final ContactInfo contact, {
+    final bool photoHighRes = true,
+  }) =>
+      _channel.invokeMethod(
+        'getAvatar',
+        <String, dynamic>{
+          'contact': ContactInfo._toMap(contact),
+          'photoHighResolution': photoHighRes,
+        },
+      );
 
   /// Adds the [contact] to the device contact list
-  static Future addContact(ContactInfo contact) =>
-      _channel.invokeMethod('addContact', ContactInfo._toMap(contact));
+  static Future addContact(ContactInfo contact) => _channel.invokeMethod(
+        'addContact',
+        ContactInfo._toMap(contact),
+      );
 
   /// Deletes the [contact] if it has a valid identifier
-  static Future deleteContact(ContactInfo contact) =>
-      _channel.invokeMethod('deleteContact', ContactInfo._toMap(contact));
+  static Future deleteContact(ContactInfo contact) => _channel.invokeMethod(
+        'deleteContact',
+        ContactInfo._toMap(contact),
+      );
 
   /// Updates the [contact] if it has a valid identifier
-  static Future updateContact(ContactInfo contact) =>
-      _channel.invokeMethod('updateContact', ContactInfo._toMap(contact));
+  static Future updateContact(ContactInfo contact) => _channel.invokeMethod(
+        'updateContact',
+        ContactInfo._toMap(contact),
+      );
 
-  static Future<ContactInfo> openContactForm(
-      {bool iOSLocalizedLabels = true,
-      bool androidLocalizedLabels = true}) async {
+  static Future<ContactInfo> openContactForm({
+    bool iOSLocalizedLabels = true,
+    bool androidLocalizedLabels = true,
+  }) async {
     dynamic result =
         await _channel.invokeMethod('openContactForm', <String, dynamic>{
       'iOSLocalizedLabels': iOSLocalizedLabels,
@@ -107,9 +127,11 @@ class FlutterContactsService {
     return _handleFormOperation(result);
   }
 
-  static Future<ContactInfo> openExistingContact(ContactInfo contact,
-      {bool iOSLocalizedLabels = true,
-      bool androidLocalizedLabels = true}) async {
+  static Future<ContactInfo> openExistingContact(
+    ContactInfo contact, {
+    bool iOSLocalizedLabels = true,
+    bool androidLocalizedLabels = true,
+  }) async {
     dynamic result = await _channel.invokeMethod(
       'openExistingContact',
       <String, dynamic>{
@@ -122,9 +144,10 @@ class FlutterContactsService {
   }
 
   // Displays the device/native contact picker dialog and returns the contact selected by the user
-  static Future<ContactInfo?> openDeviceContactPicker(
-      {bool iOSLocalizedLabels = true,
-      bool androidLocalizedLabels = true}) async {
+  static Future<ContactInfo?> openDeviceContactPicker({
+    bool iOSLocalizedLabels = true,
+    bool androidLocalizedLabels = true,
+  }) async {
     dynamic result = await _channel
         .invokeMethod('openDeviceContactPicker', <String, dynamic>{
       'iOSLocalizedLabels': iOSLocalizedLabels,
@@ -147,13 +170,16 @@ class FlutterContactsService {
       switch (result) {
         case 1:
           throw FormOperationException(
-              errorCode: FormOperationErrorCode.FORM_OPERATION_CANCELED);
+            errorCode: FormOperationErrorCode.FORM_OPERATION_CANCELED,
+          );
         case 2:
           throw FormOperationException(
-              errorCode: FormOperationErrorCode.FORM_COULD_NOT_BE_OPEN);
+            errorCode: FormOperationErrorCode.FORM_COULD_NOT_BE_OPEN,
+          );
         default:
           throw FormOperationException(
-              errorCode: FormOperationErrorCode.FORM_OPERATION_UNKNOWN_ERROR);
+            errorCode: FormOperationErrorCode.FORM_OPERATION_UNKNOWN_ERROR,
+          );
       }
     } else if (result is Map) {
       return ContactInfo.fromMap(result);
@@ -183,16 +209,17 @@ class ContactInfo {
     this.displayName,
     this.givenName,
     this.middleName,
+    this.familyName,
     this.prefix,
     this.suffix,
-    this.familyName,
     this.company,
     this.jobTitle,
+    this.note,
+    this.birthday,
     this.emails,
     this.phones,
     this.postalAddresses,
     this.avatar,
-    this.birthday,
     this.androidAccountType,
     this.androidAccountTypeRaw,
     this.androidAccountName,
@@ -207,6 +234,8 @@ class ContactInfo {
       familyName,
       company,
       jobTitle;
+  String? note;
+
   String? androidAccountTypeRaw, androidAccountName;
   AndroidAccountType? androidAccountType;
   List<ValueItem>? emails = [];
@@ -231,6 +260,7 @@ class ContactInfo {
     suffix = m["suffix"];
     company = m["company"];
     jobTitle = m["jobTitle"];
+    note = m["note"];
     androidAccountTypeRaw = m["androidAccountType"];
     androidAccountType = accountTypeFromString(androidAccountTypeRaw);
     androidAccountName = m["androidAccountName"];
@@ -275,6 +305,7 @@ class ContactInfo {
       "suffix": contact.suffix,
       "company": contact.company,
       "jobTitle": contact.jobTitle,
+      "note": contact.note,
       "androidAccountType": contact.androidAccountTypeRaw,
       "androidAccountName": contact.androidAccountName,
       "emails": emails,
@@ -297,6 +328,7 @@ class ContactInfo {
         suffix: suffix ?? other.suffix,
         familyName: familyName ?? other.familyName,
         company: company ?? other.company,
+        note: note ?? other.note,
         jobTitle: jobTitle ?? other.jobTitle,
         androidAccountType: androidAccountType ?? other.androidAccountType,
         androidAccountName: androidAccountName ?? other.androidAccountName,
@@ -333,6 +365,7 @@ class ContactInfo {
         familyName == other.familyName &&
         identifier == other.identifier &&
         jobTitle == other.jobTitle &&
+        note == other.note &&
         androidAccountType == other.androidAccountType &&
         androidAccountName == other.androidAccountName &&
         middleName == other.middleName &&
@@ -354,6 +387,7 @@ class ContactInfo {
       givenName,
       identifier,
       jobTitle,
+      note,
       androidAccountType,
       androidAccountName,
       middleName,
@@ -382,13 +416,14 @@ class ContactInfo {
 }
 
 class PostalAddress {
-  PostalAddress(
-      {this.label,
-      this.street,
-      this.city,
-      this.postcode,
-      this.region,
-      this.country});
+  PostalAddress({
+    this.label,
+    this.street,
+    this.city,
+    this.postcode,
+    this.region,
+    this.country,
+  });
   String? label, street, city, postcode, region, country;
 
   PostalAddress.fromMap(Map m) {
