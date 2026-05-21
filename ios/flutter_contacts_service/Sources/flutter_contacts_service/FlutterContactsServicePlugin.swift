@@ -127,6 +127,30 @@ public class FlutterContactsServicePlugin: NSObject, FlutterPlugin, CNContactVie
             let contact = arguments["contact"] as! [String: Any]
             let photoHighResolution = arguments["photoHighResolution"] as! Bool
             result(getAvatarForContact(contact: contact, photoHighResolution: photoHighResolution))
+        case "exportVCard":
+            let contactsArray = call.arguments as? [[String: Any]] ?? []
+            let cnContacts = contactsArray.map { dictionaryToContact(dictionary: $0) as CNContact }
+            do {
+                let data = try CNContactVCardSerialization.data(with: cnContacts)
+                result(String(data: data, encoding: .utf8) ?? "")
+            } catch {
+                result(
+                    FlutterError(
+                        code: "VCARD_ERROR", message: error.localizedDescription, details: nil))
+            }
+        case "importVCard":
+            let text = call.arguments as? String ?? ""
+            do {
+                let cnContacts = try CNContactVCardSerialization.contacts(with: Data(text.utf8))
+                result(
+                    cnContacts.map {
+                        contactToDictionary(contact: $0, localizedLabels: localizedLabels)
+                    })
+            } catch {
+                result(
+                    FlutterError(
+                        code: "VCARD_ERROR", message: error.localizedDescription, details: nil))
+            }
         case "getAccounts":
             // iOS has no contact-account concept exposed by CoreContacts.
             result([])
@@ -589,7 +613,11 @@ public class FlutterContactsServicePlugin: NSObject, FlutterPlugin, CNContactVie
         result["givenName"] = contact.givenName
         result["familyName"] = contact.familyName
         result["middleName"] = contact.middleName
-        result["note"] = contact.note
+        // `note` is entitlement-gated and may not be fetched (e.g. for
+        // vCard-parsed contacts) — accessing it then would throw.
+        if contact.isKeyAvailable(CNContactNoteKey) {
+            result["note"] = contact.note
+        }
         result["prefix"] = contact.namePrefix
         result["suffix"] = contact.nameSuffix
         result["company"] = contact.organizationName

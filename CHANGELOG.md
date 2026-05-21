@@ -1,5 +1,13 @@
 # CHANGES
 
+## 0.2.0
+
+- Add **vCard 3.0 support** — `FlutterContactsService.exportVCard(contacts)`
+  serializes contacts to a vCard document, and `importVCard(vCard)` parses one
+  back into `ContactInfo` objects. iOS uses `CNContactVCardSerialization`;
+  Android uses a built-in serializer/parser (name, organization, phones,
+  emails, postal addresses, note, birthday). Resolves #5.
+
 ## 0.1.2
 
 - Performance: `getContacts` now loads contact photos in parallel and returns

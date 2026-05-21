@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'flutter_contacts_service'
-  s.version          = '0.1.2'
+  s.version          = '0.2.0'
   s.summary          = 'A Flutter plugin to read, create, update and delete device contacts on Android and iOS.'
   s.description      = <<-DESC
 A Flutter plugin for managing device contacts natively — read, create, update,
