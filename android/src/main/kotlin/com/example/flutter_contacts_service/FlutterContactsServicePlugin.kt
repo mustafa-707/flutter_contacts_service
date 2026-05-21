@@ -8,8 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.database.Cursor
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.BaseColumns
 import android.provider.ContactsContract
@@ -29,7 +27,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.*
 
 private fun Cursor.getStringOrNull(columnIndex: Int): String? {
@@ -56,6 +53,7 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
                 ContactsContract.Contacts.Data.MIMETYPE,
                 ContactsContract.RawContacts.ACCOUNT_TYPE,
                 ContactsContract.RawContacts.ACCOUNT_NAME,
+                ContactsContract.Contacts.STARRED,
                 StructuredName.DISPLAY_NAME,
                 StructuredName.GIVEN_NAME,
                 StructuredName.MIDDLE_NAME,
@@ -275,9 +273,82 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
                     }
                 }
             }
+            "getAccounts" -> {
+                scope.launch {
+                    try {
+                        val accounts = withContext(Dispatchers.IO) { getAccounts() }
+                        result.success(accounts)
+                    } catch (e: Exception) {
+                        result.error("ERROR", "Failed to get accounts: ${e.message}", null)
+                    }
+                }
+            }
+            "setFavorite" -> {
+                scope.launch {
+                    try {
+                        val identifier = call.argument<String>("identifier")
+                        val favorite = call.argument<Boolean>("favorite") ?: false
+                        val success =
+                            withContext(Dispatchers.IO) { setFavorite(identifier, favorite) }
+                        if (success) {
+                            result.success(null)
+                        } else {
+                            result.error("null", "Failed to update the favorite state", null)
+                        }
+                    } catch (e: Exception) {
+                        result.error("ERROR", "Failed to set favorite: ${e.message}", null)
+                    }
+                }
+            }
             else -> {
                 result.notImplemented()
             }
+        }
+    }
+
+    /** Lists the distinct accounts that own contacts on the device. */
+    private fun getAccounts(): List<Map<String, String>> {
+        val accounts = linkedSetOf<Pair<String, String>>()
+        contentResolver
+            ?.query(
+                ContactsContract.RawContacts.CONTENT_URI,
+                arrayOf(
+                    ContactsContract.RawContacts.ACCOUNT_NAME,
+                    ContactsContract.RawContacts.ACCOUNT_TYPE
+                ),
+                null,
+                null,
+                null
+            )
+            ?.use { cursor ->
+                val nameIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
+                val typeIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
+                while (cursor.moveToNext()) {
+                    val name = cursor.getStringOrNull(nameIdx) ?: continue
+                    val type = cursor.getStringOrNull(typeIdx) ?: continue
+                    accounts.add(name to type)
+                }
+            }
+        return accounts.map { mapOf("name" to it.first, "type" to it.second) }
+    }
+
+    /** Stars / unstars a contact (the device "favorite" flag). */
+    private fun setFavorite(contactId: String?, favorite: Boolean): Boolean {
+        if (contactId.isNullOrEmpty()) return false
+        return try {
+            val values =
+                android.content.ContentValues().apply {
+                    put(ContactsContract.Contacts.STARRED, if (favorite) 1 else 0)
+                }
+            val uri =
+                ContentUris.withAppendedId(
+                    ContactsContract.Contacts.CONTENT_URI,
+                    contactId.toLong()
+                )
+            (contentResolver?.update(uri, values, null, null) ?: 0) > 0
+        } catch (e: Exception) {
+            Log.e("ContactsService", "Error setting favorite: ${e.message}")
+            false
         }
     }
 
@@ -308,11 +379,23 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
                 }
 
             if (withThumbnails) {
-                contacts.forEach { contact ->
-                    contact.identifier?.let { id ->
-                        val avatar = loadContactPhotoHighRes(id, photoHighResolution, contentResolver)
-                        contact.avatar = avatar ?: ByteArray(0)
-                    }
+                // Load each contact's photo in parallel — sequential loading
+                // was the main cause of slow getContacts calls (issue #3).
+                coroutineScope {
+                    contacts
+                        .map { contact ->
+                            async {
+                                contact.identifier?.let { id ->
+                                    contact.avatar =
+                                        loadContactPhotoHighRes(
+                                            id,
+                                            photoHighResolution,
+                                            contentResolver
+                                        ) ?: ByteArray(0)
+                                }
+                            }
+                        }
+                        .awaitAll()
                 }
             }
 
@@ -671,6 +754,8 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
                                 getStringOrNull(getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE))
                             androidAccountName =
                                 getStringOrNull(getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME))
+                            isStarred =
+                                getStringOrNull(getColumnIndex(ContactsContract.Contacts.STARRED)) == "1"
                         }
 
                         when (mimeType) {
@@ -798,13 +883,10 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
                 if (identifier == null || contentResolver == null) return@withContext null
 
                 val uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, identifier.toLong())
-                ContactsContract.Contacts.openContactPhotoInputStream(contentResolver, uri, highRes)?.use { stream ->
-                    val bitmap = BitmapFactory.decodeStream(stream)
-                    ByteArrayOutputStream().use { outputStream ->
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                        outputStream.toByteArray()
-                    }
-                }
+                // Return the stored photo bytes directly — decoding to a Bitmap
+                // and re-encoding to PNG was slow and pointless (issue #3).
+                ContactsContract.Contacts.openContactPhotoInputStream(contentResolver, uri, highRes)
+                    ?.use { stream -> stream.readBytes() }
             } catch (e: Exception) {
                 Log.e(LOG_TAG, "Error loading contact photo: ${e.message}")
                 null
@@ -1155,6 +1237,7 @@ data class Contact(
     var birthday: String? = null,
     var androidAccountType: String? = null,
     var androidAccountName: String? = null,
+    var isStarred: Boolean = false,
     var emails: MutableList<Item> = mutableListOf(),
     var phones: MutableList<Item> = mutableListOf(),
     var postalAddresses: MutableList<PostalAddress> = mutableListOf(),
@@ -1177,6 +1260,7 @@ data class Contact(
             "birthday" to (birthday ?: ""),
             "androidAccountType" to (androidAccountType ?: ""),
             "androidAccountName" to (androidAccountName ?: ""),
+            "isStarred" to isStarred,
             "emails" to emails.map { it.toMap() },
             "phones" to phones.map { it.toMap() },
             "postalAddresses" to postalAddresses.map { it.toMap() }

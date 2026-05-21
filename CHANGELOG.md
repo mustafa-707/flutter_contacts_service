@@ -1,5 +1,17 @@
 # CHANGES
 
+## 0.1.2
+
+- Performance: `getContacts` now loads contact photos in parallel and returns
+  the stored image bytes directly instead of decoding and re-encoding each one
+  — much faster on large contact lists. Resolves #3.
+- Add `FlutterContactsService.getAccounts()` — lists the device accounts that
+  own contacts (Android). Resolves #4.
+- Add favorite/starred support: the `ContactInfo.isStarred` field and
+  `FlutterContactsService.setFavorite(contact, favorite)` (Android). Resolves #11.
+- `getAccounts` returns an empty list and `setFavorite` is a no-op on iOS,
+  which has no equivalent concepts.
+
 ## 0.1.1
 
 - Fix `updateContact` failing with "raw_contact_id is required" on Android —

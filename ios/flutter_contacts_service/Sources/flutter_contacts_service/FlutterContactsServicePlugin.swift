@@ -127,6 +127,12 @@ public class FlutterContactsServicePlugin: NSObject, FlutterPlugin, CNContactVie
             let contact = arguments["contact"] as! [String: Any]
             let photoHighResolution = arguments["photoHighResolution"] as! Bool
             result(getAvatarForContact(contact: contact, photoHighResolution: photoHighResolution))
+        case "getAccounts":
+            // iOS has no contact-account concept exposed by CoreContacts.
+            result([])
+        case "setFavorite":
+            // The iOS Contacts framework has no favorite/starred concept — no-op.
+            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }
