@@ -117,6 +117,24 @@ class FlutterContactsService {
         'favorite': favorite,
       });
 
+  /// Serializes [contacts] into a vCard 3.0 document.
+  static Future<String> exportVCard(List<ContactInfo> contacts) async {
+    final result = await _channel.invokeMethod<String>(
+      'exportVCard',
+      contacts.map((c) => ContactInfo._toMap(c)).toList(),
+    );
+    return result ?? '';
+  }
+
+  /// Parses a vCard document into [ContactInfo] objects.
+  ///
+  /// The returned contacts are not written to the device — pass them to
+  /// [addContact] if you want to persist them.
+  static Future<List<ContactInfo>> importVCard(String vCard) async {
+    final List result = await _channel.invokeMethod('importVCard', vCard) ?? [];
+    return result.map((m) => ContactInfo.fromMap(m)).toList();
+  }
+
   /// Adds the [contact] to the device contact list
   static Future addContact(ContactInfo contact) => _channel.invokeMethod(
         'addContact',

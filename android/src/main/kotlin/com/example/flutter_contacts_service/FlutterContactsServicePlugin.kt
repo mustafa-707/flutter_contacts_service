@@ -273,6 +273,29 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
                     }
                 }
             }
+            "exportVCard" -> {
+                scope.launch {
+                    try {
+                        @Suppress("UNCHECKED_CAST")
+                        val list = (call.arguments as? List<Map<String, Any?>>) ?: emptyList()
+                        val vcard = withContext(Dispatchers.Default) { VCard.serialize(list) }
+                        result.success(vcard)
+                    } catch (e: Exception) {
+                        result.error("ERROR", "Failed to export vCard: ${e.message}", null)
+                    }
+                }
+            }
+            "importVCard" -> {
+                scope.launch {
+                    try {
+                        val text = call.arguments as? String ?: ""
+                        val contacts = withContext(Dispatchers.Default) { VCard.parse(text) }
+                        result.success(contacts)
+                    } catch (e: Exception) {
+                        result.error("ERROR", "Failed to import vCard: ${e.message}", null)
+                    }
+                }
+            }
             "getAccounts" -> {
                 scope.launch {
                     try {
