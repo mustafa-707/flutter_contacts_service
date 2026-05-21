@@ -31,3 +31,8 @@ migrate_working_dir/
 .flutter-plugins
 .flutter-plugins-dependencies
 build/
+
+# AI tooling
+.claude/
+.claude-flow/
+.mcp.json

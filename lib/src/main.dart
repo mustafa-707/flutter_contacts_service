@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/services.dart';
-import 'package:quiver/core.dart';
 
 class FlutterContactsService {
   static const MethodChannel _channel = MethodChannel(
@@ -321,7 +320,7 @@ class ContactInfo {
   }
 
   /// The [+] operator fills in this contact's empty fields with the fields from [other]
-  operator +(ContactInfo other) => ContactInfo(
+  ContactInfo operator +(ContactInfo other) => ContactInfo(
         givenName: givenName ?? other.givenName,
         middleName: middleName ?? other.middleName,
         prefix: prefix ?? other.prefix,
@@ -380,7 +379,7 @@ class ContactInfo {
 
   @override
   int get hashCode {
-    return hashObjects([
+    return Object.hashAll([
       company,
       displayName,
       familyName,
@@ -448,7 +447,7 @@ class PostalAddress {
 
   @override
   int get hashCode {
-    return hashObjects([
+    return Object.hashAll([
       label,
       street,
       city,
@@ -523,7 +522,7 @@ class ValueItem {
   }
 
   @override
-  int get hashCode => hash2(label ?? "", value ?? "");
+  int get hashCode => Object.hash(label ?? "", value ?? "");
 
   static Map _toMap(ValueItem i) => {"label": i.label, "value": i.value};
 }

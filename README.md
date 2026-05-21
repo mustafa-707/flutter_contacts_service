@@ -26,7 +26,7 @@ Add **`flutter_contacts_service`** to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_contacts_service: ^1.0.0
+  flutter_contacts_service: ^0.1.0
 ```
 
 ### Platform Specific Setup
