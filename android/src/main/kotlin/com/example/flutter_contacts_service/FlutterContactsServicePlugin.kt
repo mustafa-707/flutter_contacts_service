@@ -742,7 +742,23 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
             }
         }
 
-        return ArrayList(map.values)
+        val contacts = ArrayList(map.values)
+        // A contact aggregated from multiple accounts (e.g. Google + WhatsApp)
+        // can surface the same phone or email twice. Drop exact duplicates
+        // (issue #9).
+        contacts.forEach { contact ->
+            contact.phones =
+                contact.phones.distinctBy { "${it.label}|${it.value}" }.toMutableList()
+            contact.emails =
+                contact.emails.distinctBy { "${it.label}|${it.value}" }.toMutableList()
+            contact.postalAddresses =
+                contact.postalAddresses
+                    .distinctBy {
+                        "${it.label}|${it.street}|${it.city}|${it.postcode}|${it.region}|${it.country}"
+                    }
+                    .toMutableList()
+        }
+        return contacts
     }
 
     private fun setAvatarDataForContactIfAvailable(contact: Contact) {
@@ -914,7 +930,30 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
         }
     }
 
+    /** Resolves the first raw-contact id for an aggregated contact id. */
+    private fun getFirstRawContactId(contactId: String?): String? {
+        if (contactId.isNullOrEmpty()) return null
+        return contentResolver
+            ?.query(
+                ContactsContract.RawContacts.CONTENT_URI,
+                arrayOf(ContactsContract.RawContacts._ID),
+                "${ContactsContract.RawContacts.CONTACT_ID} = ?",
+                arrayOf(contactId),
+                null
+            )
+            ?.use { if (it.moveToFirst()) it.getString(0) else null }
+    }
+
     private fun updateContact(contact: Contact): Boolean {
+        // Data-table inserts require a RAW_CONTACT_ID, not the aggregated
+        // CONTACT_ID. Passing the contact id directly caused
+        // "raw_contact_id is required" failures (issues #6, #8).
+        val rawContactId =
+            getFirstRawContactId(contact.identifier)
+                ?: run {
+                    Log.e("ContactsService", "Error updating contact: raw contact not found")
+                    return false
+                }
         val ops = ArrayList<android.content.ContentProviderOperation>()
 
         val deleteMimeTypes =
@@ -958,7 +997,7 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
                     ContactsContract.Data.MIMETYPE,
                     ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
                 )
-                .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.identifier)
+                .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
                 .withValue(
                     ContactsContract.CommonDataKinds.Organization.TYPE,
                     ContactsContract.CommonDataKinds.Organization.TYPE_WORK
@@ -971,14 +1010,14 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
         ops.add(
             android.content.ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                 .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE)
-                .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.identifier)
+                .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
                 .withValue(ContactsContract.CommonDataKinds.Note.NOTE, contact.note)
                 .build()
         )
 
         ops.add(
             android.content.ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-                .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.identifier)
+                .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
                 .withValue(ContactsContract.Data.IS_SUPER_PRIMARY, 1)
                 .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, contact.avatar)
                 .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
@@ -989,7 +1028,7 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
             val op =
                 android.content.ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                     .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-                    .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.identifier)
+                    .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
                     .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone.value)
 
             if (phone.type == ContactsContract.CommonDataKinds.Phone.TYPE_CUSTOM) {
@@ -1008,7 +1047,7 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
             ops.add(
                 android.content.ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                     .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
-                    .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.identifier)
+                    .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
                     .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email.value)
                     .withValue(ContactsContract.CommonDataKinds.Email.TYPE, email.type)
                     .build()
@@ -1022,7 +1061,7 @@ class FlutterContactsServicePlugin : MethodCallHandler, FlutterPlugin, ActivityA
                         ContactsContract.Data.MIMETYPE,
                         ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
                     )
-                    .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.identifier)
+                    .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
                     .withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, address.type)
                     .withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, address.street)
                     .withValue(ContactsContract.CommonDataKinds.StructuredPostal.CITY, address.city)

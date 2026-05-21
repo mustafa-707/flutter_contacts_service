@@ -1,6 +1,6 @@
 name: flutter_contacts_service
 description: "A Flutter plugin to read, create, update and delete device contacts natively on Android and iOS."
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/mustafa-707/flutter_contacts_service
 repository: https://github.com/mustafa-707/flutter_contacts_service
 issue_tracker: https://github.com/mustafa-707/flutter_contacts_service/issues

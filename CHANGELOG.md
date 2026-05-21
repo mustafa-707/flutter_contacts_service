@@ -1,5 +1,14 @@
 # CHANGES
 
+## 0.1.1
+
+- Fix `updateContact` failing with "raw_contact_id is required" on Android —
+  it passed the aggregated `CONTACT_ID` to Data-table inserts instead of the
+  `RAW_CONTACT_ID`, so the whole update failed. Updates (including phone
+  numbers) now save correctly. Resolves #6 and #8.
+- Fix duplicate phone numbers / emails on Android for contacts aggregated
+  from multiple accounts — exact duplicates are now dropped. Resolves #9.
+
 ## 0.1.0
 
 - **Fix iOS UIScene crash** — the plugin force-unwrapped `appDelegate.window`,
