@@ -96,6 +96,27 @@ class FlutterContactsService {
         },
       );
 
+  /// Lists the accounts that own contacts on the device.
+  ///
+  /// Android only — returns an empty list on iOS, which has no
+  /// contact-account concept.
+  static Future<List<ContactAccount>> getAccounts() async {
+    final List? accounts = await _channel.invokeMethod('getAccounts');
+    return accounts == null
+        ? <ContactAccount>[]
+        : accounts.map((a) => ContactAccount.fromMap(Map.from(a))).toList();
+  }
+
+  /// Marks [contact] as a favorite (starred), or removes the mark.
+  ///
+  /// Android only — a no-op on iOS, where the Contacts framework has no
+  /// favorite concept.
+  static Future<void> setFavorite(ContactInfo contact, bool favorite) =>
+      _channel.invokeMethod('setFavorite', <String, dynamic>{
+        'identifier': contact.identifier,
+        'favorite': favorite,
+      });
+
   /// Adds the [contact] to the device contact list
   static Future addContact(ContactInfo contact) => _channel.invokeMethod(
         'addContact',
@@ -237,6 +258,9 @@ class ContactInfo {
 
   String? androidAccountTypeRaw, androidAccountName;
   AndroidAccountType? androidAccountType;
+
+  /// Whether the contact is marked as a favorite (starred). Android only.
+  bool isStarred = false;
   List<ValueItem>? emails = [];
   List<ValueItem>? phones = [];
   List<PostalAddress>? postalAddresses = [];
@@ -263,6 +287,7 @@ class ContactInfo {
     androidAccountTypeRaw = m["androidAccountType"];
     androidAccountType = accountTypeFromString(androidAccountTypeRaw);
     androidAccountName = m["androidAccountName"];
+    isStarred = m["isStarred"] == true || m["isStarred"] == 1;
     emails = (m["emails"] as List?)?.map((m) => ValueItem.fromMap(m)).toList();
     phones = (m["phones"] as List?)?.map((m) => ValueItem.fromMap(m)).toList();
     postalAddresses = (m["postalAddresses"] as List?)
@@ -307,6 +332,7 @@ class ContactInfo {
       "note": contact.note,
       "androidAccountType": contact.androidAccountTypeRaw,
       "androidAccountName": contact.androidAccountName,
+      "isStarred": contact.isStarred,
       "emails": emails,
       "phones": phones,
       "postalAddresses": postalAddresses,
@@ -528,3 +554,19 @@ class ValueItem {
 }
 
 enum AndroidAccountType { facebook, google, whatsapp, other }
+
+/// An account that owns contacts on the device (Android).
+class ContactAccount {
+  final String name;
+  final String type;
+
+  const ContactAccount({required this.name, required this.type});
+
+  factory ContactAccount.fromMap(Map m) => ContactAccount(
+        name: m['name']?.toString() ?? '',
+        type: m['type']?.toString() ?? '',
+      );
+
+  @override
+  String toString() => 'ContactAccount(name: $name, type: $type)';
+}
