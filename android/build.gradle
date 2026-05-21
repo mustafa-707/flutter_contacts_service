@@ -1,15 +1,15 @@
 group = "com.example.flutter_contacts_service"
-version = "1.0-SNAPSHOT"
+version = "0.1.0"
 
 buildscript {
-    ext.kotlin_version = "1.8.22"
+    ext.kotlin_version = "2.3.21"
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.1.0")
+        classpath("com.android.tools.build:gradle:8.11.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
     }
 }
@@ -27,20 +27,15 @@ apply plugin: "kotlin-android"
 android {
     namespace = "com.example.flutter_contacts_service"
 
-    compileSdk = 35
+    compileSdk = 36
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11
-    }
-
     sourceSets {
         main.java.srcDirs += "src/main/kotlin"
-        test.java.srcDirs += "src/test/kotlin"
     }
 
     defaultConfig {
@@ -48,21 +43,13 @@ android {
     }
 
     dependencies {
-        testImplementation("org.jetbrains.kotlin:kotlin-test")
-        testImplementation("org.mockito:mockito-core:5.0.0")
-        implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
-        implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
+        implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0"
+        implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
     }
+}
 
-    testOptions {
-        unitTests.all {
-            useJUnitPlatform()
-
-            testLogging {
-               events "passed", "skipped", "failed", "standardOut", "standardError"
-               outputs.upToDateWhen {false}
-               showStandardStreams = true
-            }
-        }
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
     }
 }
